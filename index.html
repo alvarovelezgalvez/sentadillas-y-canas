@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sentadillas y Canas</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sent. y Canas">
+<meta name="theme-color" content="#0e2b28">
+<link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Sentadillas%20y%20Canas%22,%22short_name%22:%22Sent.%20y%20Canas%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230e2b28%22,%22theme_color%22:%22%230e2b28%22}">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230e2b28'/%3E%3Ctext x='50' y='62' font-size='42' text-anchor='middle' fill='%23f3ecdf' font-family='sans-serif'%3E15%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e2b28;
+    --bg-2:#0a211f;
+    --surface:#153c37;
+    --surface-2:#1d4a44;
+    --text:#f3ecdf;
+    --text-dim:#9dc0b8;
+    --text-faint:#6d928a;
+    --core:#e3b23c;
+    --fuerza:#c0453a;
+    --intenso:#3fc7b4;
+    --ring-track:#1d4a44;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(circle at 50% -10%, #123934 0%, var(--bg) 45%, var(--bg-2) 100%);
+    color:var(--text);
+    font-family:'Work Sans', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior:none;
+  }
+  #app{
+    max-width:460px;
+    margin:0 auto;
+    min-height:100vh;
+    padding:22px 20px calc(40px + env(safe-area-inset-bottom));
+    display:flex;
+    flex-direction:column;
+  }
+  .screen{display:none; flex:1; flex-direction:column;}
+  .screen.active{display:flex;}
+
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+  }
+  h1.display, .display{
+    font-family:'Bebas Neue', sans-serif;
+    letter-spacing:0.02em;
+    line-height:0.95;
+  }
+  h1.display{font-size:44px; margin:4px 0 2px;}
+
+  /* --- Sundial / wheel signature --- */
+  .wheel-wrap{display:flex; align-items:center; gap:16px; margin:18px 0 10px;}
+  .wheel{
+    position:relative;
+    width:78px; height:78px;
+    border-radius:50%;
+    flex-shrink:0;
+    background: conic-gradient(
+      var(--core) 0deg 120deg,
+      var(--fuerza) 120deg 240deg,
+      var(--intenso) 240deg 360deg
+    );
+    box-shadow: inset 0 0 0 6px var(--bg-2);
+  }
+  .wheel::after{
+    content:'';
+    position:absolute; inset:14px;
+    border-radius:50%;
+    background:var(--bg-2);
+  }
+  .wheel .pin{
+    position:absolute;
+    top:50%; left:50%;
+    width:7px; height:7px;
+    margin:-3.5px;
+    border-radius:50%;
+    background:var(--text);
+    transform-origin:50% 50%;
+  }
+  .wheel-legend{font-size:13px; color:var(--text-dim); line-height:1.5;}
+  .wheel-legend b{color:var(--text); font-weight:600;}
+
+  .card{
+    background:var(--surface);
+    border-radius:18px;
+    padding:20px;
+    margin-bottom:14px;
+  }
+  .card.tight{padding:16px 18px;}
+
+  .type-pill-row{display:flex; gap:8px; margin:14px 0 4px;}
+  .type-pill{
+    flex:1;
+    padding:10px 6px;
+    border-radius:12px;
+    text-align:center;
+    font-size:13px;
+    font-weight:600;
+    border:1.5px solid var(--surface-2);
+    color:var(--text-dim);
+    background:transparent;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .type-pill.active{
+    color:var(--bg-2);
+    border-color:transparent;
+  }
+  .type-pill[data-type="core"].active{background:var(--core);}
+  .type-pill[data-type="fuerza"].active{background:var(--fuerza);}
+  .type-pill[data-type="intenso"].active{background:var(--intenso);}
+
+  .btn{
+    display:block;
+    width:100%;
+    text-align:center;
+    padding:16px;
+    border-radius:14px;
+    border:none;
+    font-family:'Work Sans', sans-serif;
+    font-weight:700;
+    font-size:16px;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn-primary{background:var(--text); color:var(--bg-2);}
+  .btn-ghost{background:transparent; color:var(--text-dim); border:1.5px solid var(--surface-2);}
+  .btn-row{display:flex; gap:10px;}
+  .btn-row .btn{flex:1;}
+  .link-btn{
+    background:none; border:none; color:var(--text-dim);
+    font-size:14px; text-decoration:underline;
+    padding:6px 0; cursor:pointer; text-align:left;
+    font-family:'Work Sans', sans-serif;
+  }
+
+  .stat-row{display:flex; gap:10px; margin-top:4px;}
+  .stat{
+    flex:1; background:var(--surface); border-radius:14px; padding:14px;
+    text-align:center;
+  }
+  .stat .n{font-family:'Bebas Neue'; font-size:30px; line-height:1;}
+  .stat .l{font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.08em; margin-top:4px;}
+
+  .hist-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:9px 0; border-bottom:1px solid var(--surface-2); font-size:14px;
+  }
+  .hist-row:last-child{border-bottom:none;}
+  .hist-tag{
+    font-size:11px; padding:3px 8px; border-radius:20px; font-weight:700;
+    text-transform:uppercase; letter-spacing:0.04em;
+  }
+
+  /* preview screen */
+  .ex-row{
+    display:flex; gap:12px; align-items:flex-start;
+    padding:14px 0; border-bottom:1px solid var(--surface-2);
+  }
+  .ex-row:last-child{border-bottom:none;}
+  .ex-icon-wrap{
+    width:44px; height:44px; flex-shrink:0; border-radius:10px;
+    background:var(--surface-2); display:flex; align-items:center; justify-content:center;
+  }
+  .ex-icon{width:32px; height:32px; color:var(--text);}
+  .ex-num{
+    font-family:'JetBrains Mono'; font-size:13px; color:var(--text-faint);
+    width:16px; flex-shrink:0; padding-top:2px;
+  }
+  .ex-name{font-weight:600; font-size:15px;}
+  .ex-tip{color:var(--text-dim); font-size:13px; margin-top:2px; line-height:1.4;}
+  .ex-video-link{
+    display:inline-flex; align-items:center; gap:4px;
+    margin-top:6px; font-size:12px; font-weight:700;
+    color:var(--intenso); text-decoration:none;
+  }
+  .ex-time{
+    font-family:'JetBrains Mono'; font-size:12px; color:var(--text-faint);
+    flex-shrink:0; padding-top:2px;
+  }
+
+  .track-icon-wrap{
+    width:110px; height:110px; margin:6px auto 0;
+    border-radius:50%;
+    background:var(--surface);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .track-icon-wrap .ex-icon{width:74px; height:74px; color:inherit;}
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:6px;
+  }
+  .back-btn{
+    background:none; border:none; color:var(--text-dim); font-size:14px;
+    cursor:pointer; padding:6px 0; font-family:'Work Sans';
+  }
+
+  /* tracking screen */
+  #trackScreen{align-items:center; justify-content:space-between; text-align:center;}
+  .track-top{width:100%;}
+  .track-phase{
+    font-family:'JetBrains Mono'; font-size:12px; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--text-faint); margin-bottom:6px;
+  }
+  .track-name{font-family:'Bebas Neue'; font-size:34px; padding:0 10px; min-height:40px;}
+  .track-tip{color:var(--text-dim); font-size:14px; margin-top:8px; min-height:38px; padding:0 20px;}
+
+  .ring-wrap{position:relative; width:210px; height:210px; margin:10px auto;}
+  .ring-wrap svg{width:100%; height:100%; transform:rotate(-90deg);}
+  .ring-time{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:'Bebas Neue'; font-size:52px;
+  }
+
+  .dots{display:flex; gap:5px; flex-wrap:wrap; justify-content:center; max-width:280px; margin:0 auto 6px;}
+  .dot{width:9px; height:9px; border-radius:50%; background:var(--surface-2);}
+  .dot.done{background:var(--text-dim);}
+  .dot.now{background:var(--text); transform:scale(1.3);}
+
+  .track-controls{display:flex; gap:12px; width:100%; margin-top:14px;}
+  .ctrl-btn{
+    flex:1; padding:16px 0; border-radius:14px; border:none; font-weight:700;
+    font-size:15px; cursor:pointer; font-family:'Work Sans';
+  }
+  .ctrl-btn.pause{background:var(--text); color:var(--bg-2);}
+  .ctrl-btn.skip{background:var(--surface); color:var(--text);}
+  .ctrl-btn.quit{background:transparent; color:var(--text-faint); border:1px solid var(--surface-2); flex:0.6;}
+
+  /* summary */
+  #summaryScreen{align-items:center; text-align:center; justify-content:center;}
+  .summary-emoji{font-size:52px; margin-bottom:6px;}
+
+  .footnote{color:var(--text-faint); font-size:12px; line-height:1.5; margin-top:auto; padding-top:18px;}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(6,20,18,0.72);
+    display:none; align-items:center; justify-content:center;
+    padding:24px; z-index:100;
+  }
+  .modal-overlay.active{display:flex;}
+  .modal-box{
+    background:var(--surface); border-radius:18px; padding:24px;
+    max-width:300px; width:100%; text-align:center;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== HOME ===== -->
+  <div class="screen active" id="homeScreen">
+    <div class="eyebrow" style="color:var(--intenso); margin-bottom:2px;">SENTADILLAS Y CANAS</div>
+    <div class="eyebrow" id="dateLine">HOY</div>
+    <h1 class="display" id="homeTitle">Cargando…</h1>
+
+    <div class="wheel-wrap">
+      <div class="wheel" id="homeWheel"><div class="pin" id="homePin"></div></div>
+      <div class="wheel-legend">
+        <b>Core</b> · <b>Fuerza</b> · <b>Intenso</b><br>
+        rotan cada día, sin repetirse
+      </div>
+    </div>
+
+    <div class="type-pill-row" id="typePills">
+      <button class="type-pill" data-type="core">CORE</button>
+      <button class="type-pill" data-type="fuerza">FUERZA</button>
+      <button class="type-pill" data-type="intenso">INTENSO</button>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <div class="eyebrow" id="variantLine">VARIANTE A · ~15 MIN</div>
+      <div style="margin-top:14px;" class="btn-row">
+        <button class="btn btn-primary" id="goPreviewBtn">Ver ejercicios</button>
+      </div>
+      <div style="margin-top:10px;">
+        <button class="btn btn-ghost" id="startDirectBtn">Empezar ahora</button>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="n" id="streakN">0</div><div class="l">Racha</div></div>
+      <div class="stat"><div class="n" id="totalN">0</div><div class="l">Sesiones</div></div>
+      <div class="stat"><div class="n" id="minN">0</div><div class="l">Minutos</div></div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <div class="eyebrow" style="margin-bottom:8px;">ÚLTIMAS SESIONES</div>
+      <div id="historyList"><div class="hist-row" style="color:var(--text-faint);">Aún no hay sesiones registradas.</div></div>
+    </div>
+
+    <div class="footnote">Solo necesitas cuerpo + esterilla. Guardado en este dispositivo/artefacto — si abres la app desde otro sitio, el historial no se comparte.</div>
+  </div>
+
+  <!-- ===== PREVIEW ===== -->
+  <div class="screen" id="previewScreen">
+    <div class="topbar">
+      <button class="back-btn" onclick="goHome()">‹ Volver</button>
+      <div class="eyebrow" id="previewEyebrow">CORE</div>
+    </div>
+    <h1 class="display" id="previewTitle">Rutina</h1>
+    <div class="card" id="previewList" style="margin-top:10px;"></div>
+    <button class="btn btn-primary" id="startFromPreviewBtn" style="margin-top:6px;">Empezar sesión</button>
+  </div>
+
+  <!-- ===== TRACK ===== -->
+  <div class="screen" id="trackScreen">
+    <div class="track-top">
+      <div class="topbar">
+        <button class="back-btn" id="quitTopBtn">Salir</button>
+        <div class="eyebrow" id="trackTypeLabel">CORE</div>
+      </div>
+      <div class="dots" id="dotsRow"></div>
+    </div>
+
+    <div>
+      <div class="track-phase" id="trackPhase">TRABAJO</div>
+      <div class="track-name" id="trackName">Plancha</div>
+      <div class="track-icon-wrap" id="trackIconWrap"></div>
+      <div class="track-tip" id="trackTip">Mantén el core apretado</div>
+      <a class="ex-video-link" id="trackVideoLink" href="#" target="_blank" rel="noopener" style="justify-content:center;">▶ Ver vídeo</a>
+
+      <div class="ring-wrap">
+        <svg viewBox="0 0 220 220">
+          <circle cx="110" cy="110" r="98" fill="none" stroke="var(--ring-track)" stroke-width="14"/>
+          <circle cx="110" cy="110" r="98" fill="none" id="ringProgress" stroke="var(--text)" stroke-width="14"
+                  stroke-linecap="round" stroke-dasharray="616" stroke-dashoffset="0"/>
+        </svg>
+        <div class="ring-time" id="ringTime">40</div>
+      </div>
+    </div>
+
+    <div class="track-controls">
+      <button class="ctrl-btn quit" id="prevBtn">‹</button>
+      <button class="ctrl-btn pause" id="pauseBtn">Pausar</button>
+      <button class="ctrl-btn skip" id="skipBtn">Saltar ›</button>
+    </div>
+  </div>
+
+  <!-- ===== SUMMARY ===== -->
+  <div class="screen" id="summaryScreen">
+    <div class="summary-emoji">☀️</div>
+    <div class="eyebrow">SESIÓN COMPLETA</div>
+    <h1 class="display" id="summaryTitle">Fuerza · Variante B</h1>
+    <p style="color:var(--text-dim); max-width:280px;" id="summaryLine">14 minutos completados. Racha: 3 días.</p>
+    <button class="btn btn-primary" style="max-width:260px; margin-top:14px;" onclick="goHome()">Volver al inicio</button>
+  </div>
+
+  <!-- ===== OVERLAY CONFIRMAR SALIR ===== -->
+  <div class="modal-overlay" id="quitOverlay">
+    <div class="modal-box">
+      <div class="display" style="font-size:26px; margin-bottom:6px;">¿Salir de la sesión?</div>
+      <p style="color:var(--text-dim); font-size:14px; margin:0 0 18px;">No se guardará como completada.</p>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="quitCancelBtn">Seguir</button>
+        <button class="btn btn-primary" id="quitConfirmBtn">Salir</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ---------------------------------------------------------
+   ICONOS ESQUEMÁTICOS (figuras de palitos, generadas por código)
+--------------------------------------------------------- */
+function fig(head, segments, extra){
+  let s = `<line x1="6" y1="90" x2="94" y2="90" stroke="currentColor" stroke-width="3" stroke-dasharray="3 6" opacity="0.3"/>`;
+  segments.forEach(seg=>{
+    const pts = seg.map(p=>p.join(',')).join(' ');
+    s += `<polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>`;
+  });
+  s += `<circle cx="${head[0]}" cy="${head[1]}" r="8" fill="currentColor"/>`;
+  if(extra) s += extra;
+  return `<svg viewBox="0 0 100 100" class="ex-icon" xmlns="http://www.w3.org/2000/svg">${s}</svg>`;
+}
+const ARROW_CURL = `<path d="M62 30 Q70 20 60 14" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M60 10 L60 15 L65 16" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
+const ARROW_UP = `<path d="M50 8 L50 22 M43 15 L50 6 L57 15" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
+const ARROW_SIDE = `<path d="M8 45 L20 45 M14 39 L20 45 L14 51" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M92 45 L80 45 M86 39 L80 45 L86 51" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+const ICONS = {
+  plank: fig([16,44], [[[24,48],[80,78]], [[27,50],[27,86]]]),
+  'mountain-climbers': fig([15,42], [[[22,46],[75,72]],[[26,48],[26,86]],[[50,60],[38,52],[35,68]]], ARROW_CURL),
+  'bicycle-crunch': fig([18,58], [[[18,66],[45,80]],[[45,80],[85,80]],[[45,80],[36,60],[28,50]],[[18,58],[8,52]],[[18,58],[26,48]]], ARROW_CURL),
+  'leg-raise': fig([12,80], [[[12,80],[55,80]],[[55,80],[70,30]],[[12,80],[6,74]]], ARROW_UP),
+  superman: fig([16,52], [[[22,54],[70,60]],[[70,60],[92,50]],[[22,54],[10,44]]]),
+  'side-plank': fig([18,38], [[[24,40],[78,70]],[[30,42],[30,86]],[[30,42],[24,18]]]),
+  'dead-bug': fig([16,58], [[[16,64],[46,78]],[[46,78],[80,66]],[[46,78],[70,88]],[[16,64],[8,40]]]),
+  'plank-shoulder-tap': fig([16,44], [[[24,48],[80,78]],[[27,50],[27,86]],[[27,50],[40,34],[24,48]]], ARROW_CURL),
+  'russian-twist': fig([20,42], [[[24,46],[45,72]],[[45,72],[62,84]],[[45,72],[28,84]],[[24,46],[40,52],[55,44]]], ARROW_SIDE),
+  'v-up': fig([16,34], [[[20,38],[46,80]],[[46,80],[76,36]],[[20,38],[10,30]]]),
+  'glute-bridge-march': fig([14,64], [[[14,68],[38,80]],[[38,80],[58,80]],[[58,80],[62,52]],[[38,80],[46,66],[46,44]]], ARROW_UP),
+  'thread-needle': fig([18,36], [[[24,38],[76,66]],[[30,40],[30,86]],[[30,40],[52,54],[70,40]]], ARROW_CURL),
+  'plank-leg-raise': fig([16,44], [[[24,48],[76,74]],[[27,50],[27,86]],[[76,74],[90,52]]], ARROW_UP),
+  'flutter-kicks': fig([16,58], [[[16,64],[50,78]],[[50,78],[85,72]],[[50,78],[85,86]],[[16,64],[8,52]]]),
+  'superman-row': fig([16,52], [[[22,54],[70,60]],[[70,60],[92,50]],[[22,54],[10,60],[6,50]]]),
+  crunch: fig([16,56], [[[16,62],[42,78]],[[42,78],[76,78]],[[76,78],[80,58]],[[16,62],[8,50]]], ARROW_CURL),
+  squat: fig([50,20], [[[50,28],[50,48]],[[50,48],[36,52],[32,80]],[[50,48],[64,52],[68,80]],[[50,32],[36,42]],[[50,32],[64,42]]]),
+  lunge: fig([48,18], [[[48,26],[50,50]],[[50,50],[30,64],[26,86]],[[50,50],[70,58],[86,52]],[[49,30],[36,40]],[[49,30],[62,40]]]),
+  pushup: fig([16,46], [[[24,50],[80,76]],[[27,52],[40,74]],[[80,76],[64,58]]]),
+  'glute-bridge': fig([14,66], [[[14,70],[38,82]],[[38,82],[58,82]],[[58,82],[62,54]]], ARROW_UP),
+  'wall-sit': fig([50,22], [[[50,30],[50,50]],[[50,50],[36,54],[32,82]],[[50,50],[64,54],[68,82]],[[50,26],[50,10]]]),
+  'plank-updown': fig([16,44], [[[24,48],[80,78]],[[27,50],[36,70]],[[36,70],[27,86]]], ARROW_CURL),
+  'sumo-squat': fig([50,20], [[[50,28],[50,48]],[[50,48],[26,58],[20,84]],[[50,48],[74,58],[80,84]]]),
+  'calf-raise': fig([50,26], [[[50,32],[50,58]],[[50,58],[42,88]],[[50,58],[58,88]]], ARROW_UP),
+  'single-leg-bridge': fig([14,66], [[[14,70],[38,82]],[[38,82],[58,82]],[[58,82],[62,54]],[[38,82],[62,70],[86,74]]], ARROW_UP),
+  'pushup-diamond': fig([16,46], [[[24,50],[80,76]],[[27,52],[48,66]],[[80,76],[64,58]]], `<circle cx="46" cy="70" r="4" fill="none" stroke="currentColor" stroke-width="3"/>`),
+  'lateral-lunge': fig([50,18], [[[50,26],[52,48]],[[52,48],[74,60],[86,68]],[[52,48],[38,56],[24,52]],[[51,30],[38,40]],[[51,30],[62,38]]]),
+  'jumping-jack': fig([50,18], [[[50,26],[50,50]],[[50,50],[26,82]],[[50,50],[74,82]],[[50,28],[22,14]],[[50,28],[78,14]]], ARROW_UP),
+  'high-knees': fig([46,16], [[[46,24],[48,50]],[[48,50],[34,44],[30,26]],[[48,50],[62,64],[58,86]],[[47,28],[34,20]],[[47,28],[62,38]]], ARROW_CURL),
+  'jump-squat': fig([50,14], [[[50,22],[50,42]],[[50,42],[36,48],[34,68]],[[50,42],[64,48],[66,68]],[[50,18],[38,26]],[[50,18],[62,26]]], ARROW_UP),
+  'plank-jack': fig([16,44], [[[24,48],[80,78]],[[27,50],[27,86]],[[80,78],[92,86]]], ARROW_SIDE),
+  skater: fig([50,20], [[[50,28],[54,48]],[[54,48],[70,58],[86,54]],[[54,48],[38,66],[46,86]],[[51,32],[64,24]],[[51,32],[40,42]]], ARROW_SIDE),
+  burpee: fig([18,50], [[[24,52],[70,72]],[[27,54],[27,86]],[[70,72],[78,52],[74,34]]], ARROW_UP)
+};
+function iconFor(slug){
+  return ICONS[slug] || ICONS.plank;
+}
+function ytSearchUrl(name){
+  const q = name.replace(/\(.*?\)/g, '').trim() + ' cómo hacer bien ejercicio';
+  return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q);
+}
+</script>
+<script>
+/* ---------------------------------------------------------
+   DATOS DE RUTINAS
+--------------------------------------------------------- */
+const TYPES = ["core","fuerza","intenso"];
+const TYPE_LABEL = {core:"Core", fuerza:"Fuerza", intenso:"Intenso"};
+const TYPE_SUB = {
+  core:"Zona media y estabilidad",
+  fuerza:"Piernas, glúteo y empuje",
+  intenso:"Cardio a intervalos"
+};
+
+const WORKOUTS = {
+  core: [
+    [
+      {name:"Plancha", tip:"Cuerpo en línea recta, ombligo hacia la columna, no dejes caer la cadera.", icon:"plank"},
+      {name:"Escaladores (mountain climbers)", tip:"Rodilla al pecho sin que la cadera suba, ritmo controlado.", icon:"mountain-climbers"},
+      {name:"Bicicleta abdominal", tip:"Codo hacia rodilla contraria, gira desde el torso, no tires del cuello.", icon:"bicycle-crunch"},
+      {name:"Elevación de piernas", tip:"Espalda baja pegada al suelo, baja las piernas sin arquear.", icon:"leg-raise"},
+      {name:"Superman", tip:"Brazos y piernas se elevan a la vez, aprieta glúteo y espalda 1 seg arriba.", icon:"superman"},
+      {name:"Plancha lateral (cambia de lado a mitad)", tip:"Cadera arriba, hombro sobre el codo, cuerpo recto.", icon:"side-plank"}
+    ],
+    [
+      {name:"Dead bug", tip:"Espalda pegada al suelo, brazo y pierna contraria bajan a la vez, muy lento.", icon:"dead-bug"},
+      {name:"Plancha con toque de hombro", tip:"Pies bien separados para no balancear la cadera al tocar.", icon:"plank-shoulder-tap"},
+      {name:"Russian twist (sin peso)", tip:"Talones apoyados o elevados, gira desde el torso, no rebotes.", icon:"russian-twist"},
+      {name:"Elevación de piernas en V", tip:"Sube piernas y torso a la vez formando una V, baja controlado.", icon:"v-up"},
+      {name:"Puente de glúteos con marcha", tip:"Cadera arriba fija, alterna elevar una rodilla sin que caiga la cadera.", icon:"glute-bridge-march"},
+      {name:"Plancha lateral con rotación (\"hilo y aguja\")", tip:"Desde plancha lateral, gira el brazo libre por debajo del cuerpo.", icon:"thread-needle"}
+    ],
+    [
+      {name:"Abdominal bicicleta lento", tip:"Prioriza rango completo y control sobre velocidad.", icon:"bicycle-crunch"},
+      {name:"Plancha con elevación de pierna", tip:"Sube la pierna sin rotar la cadera, aprieta glúteo arriba.", icon:"plank-leg-raise"},
+      {name:"Tijeras (flutter kicks)", tip:"Espalda baja pegada al suelo, piernas rectas, movimiento pequeño.", icon:"flutter-kicks"},
+      {name:"Superman con remo", tip:"Simula tirar de una goma hacia atrás, junta los omóplatos.", icon:"superman-row"},
+      {name:"Plancha lateral", tip:"Aguanta firme, cadera alta, respira sin bloquear el aire.", icon:"side-plank"},
+      {name:"Crunch lento con pausa arriba", tip:"Sube despacio, pausa 1 seg contrayendo el abdomen, baja controlado.", icon:"crunch"}
+    ]
+  ],
+  fuerza: [
+    [
+      {name:"Sentadilla", tip:"Rodillas en línea con los pies, pecho arriba, baja como si te sentaras.", icon:"squat"},
+      {name:"Zancadas alternas", tip:"Rodilla trasera casi roza el suelo, tronco recto, empuja con el talón delantero.", icon:"lunge"},
+      {name:"Flexiones (push-ups)", tip:"Manos un poco más anchas que hombros, cuerpo recto, baja controlado. Rodillas si hace falta.", icon:"pushup"},
+      {name:"Puente de glúteos", tip:"Empuja con los talones, aprieta glúteo arriba, no arquees la lumbar.", icon:"glute-bridge"},
+      {name:"Sentadilla isométrica (mantener abajo)", tip:"Muslos lo más paralelos posible al suelo, peso en los talones.", icon:"wall-sit"},
+      {name:"Plancha a flexión (plank up-down)", tip:"Alterna apoyo en antebrazos y manos manteniendo la cadera estable.", icon:"plank-updown"}
+    ],
+    [
+      {name:"Zancada trasera alterna", tip:"Paso largo hacia atrás, baja recto, rodilla delantera no pasa la punta del pie.", icon:"lunge"},
+      {name:"Flexiones (manos elevadas si necesitas facilitar)", tip:"Apoya manos en el borde de la cama o sofá si necesitas menos intensidad.", icon:"pushup"},
+      {name:"Sentadilla sumo", tip:"Pies bien abiertos y girados hacia fuera, baja empujando rodillas hacia afuera.", icon:"sumo-squat"},
+      {name:"Elevación de talones (gemelos)", tip:"Sube lo más alto posible, baja muy despacio, apóyate en algo si pierdes equilibrio.", icon:"calf-raise"},
+      {name:"Puente a una pierna", tip:"Una rodilla flexionada apoyada, la otra extendida; empuja con el talón de apoyo.", icon:"single-leg-bridge"},
+      {name:"Plancha con toques de hombro", tip:"Cadera estable, no balancees el cuerpo al tocar.", icon:"plank-shoulder-tap"}
+    ],
+    [
+      {name:"Sentadilla con pulso", tip:"Baja, sube un poco, vuelve a bajar; mantén tensión constante en el muslo.", icon:"squat"},
+      {name:"Flexiones diamante o de rodillas", tip:"Manos juntas bajo el pecho para más tríceps, o apoya rodillas para facilitar.", icon:"pushup-diamond"},
+      {name:"Zancada lateral", tip:"Empuja la cadera hacia atrás al bajar hacia un lado, pierna contraria estirada.", icon:"lateral-lunge"},
+      {name:"Puente de glúteos con marcha", tip:"Cadera fija arriba, alterna piernas sin que baje la cadera.", icon:"glute-bridge-march"},
+      {name:"Superman", tip:"Aprieta glúteos y espalda alta, sube brazos y piernas juntos.", icon:"superman"},
+      {name:"Plancha", tip:"Línea recta de hombros a talones, no dejes caer la cadera.", icon:"plank"}
+    ]
+  ],
+  intenso: [
+    [
+      {name:"Jumping jacks", tip:"Aterriza suave, rodillas ligeramente flexionadas, ritmo constante.", icon:"jumping-jack"},
+      {name:"Rodillas altas (high knees)", tip:"Lleva la rodilla a la altura de la cadera, brazos activos, ritmo rápido.", icon:"high-knees"},
+      {name:"Escaladores rápidos", tip:"Mantén la cadera baja y estable aunque aumentes el ritmo.", icon:"mountain-climbers"},
+      {name:"Sentadilla con salto suave", tip:"Aterriza flexionando rodillas, sin bloquear al caer. Sin salto si prefieres más control.", icon:"jump-squat"},
+      {name:"Plancha con salto de pies (plank jacks)", tip:"Cadera estable, salta abriendo y cerrando los pies.", icon:"plank-jack"},
+      {name:"Patinador (skater)", tip:"Salto lateral aterrizando en una pierna, la otra cruza detrás.", icon:"skater"}
+    ],
+    [
+      {name:"Burpee sin salto (versión suave)", tip:"Manos al suelo, pies atrás en plancha, vuelve y ponte de pie sin saltar si prefieres.", icon:"burpee"},
+      {name:"Rodillas altas", tip:"Ritmo alto pero controlado, mantén el torso erguido.", icon:"high-knees"},
+      {name:"Zancada alterna con salto suave (o sin salto)", tip:"Cambia de pierna en el aire con suavidad, o alterna caminando si prefieres bajo impacto.", icon:"lunge"},
+      {name:"Escaladores (mountain climbers)", tip:"No dejes que la cadera suba, ritmo constante y respirado.", icon:"mountain-climbers"},
+      {name:"Jumping jacks", tip:"Brazos y piernas coordinados, aterrizajes suaves.", icon:"jumping-jack"},
+      {name:"Sentadilla con pulso rápido", tip:"Mantén rango pequeño pero constante, sin bloquear rodillas.", icon:"squat"}
+    ],
+    [
+      {name:"Escalador cruzado", tip:"Lleva la rodilla hacia el codo contrario, gira ligeramente el torso.", icon:"mountain-climbers"},
+      {name:"Salto de tijera con sentadilla (alterna)", tip:"Combina zancada y sentadilla suave, prioriza control al aterrizar.", icon:"jump-squat"},
+      {name:"Patinador (skater)", tip:"Aterriza suave en una pierna, brazos ayudan al equilibrio.", icon:"skater"},
+      {name:"Plancha con salto de pies", tip:"Cadera fija, pies saltan hacia fuera y adentro.", icon:"plank-jack"},
+      {name:"Burpee modificado", tip:"Elimina el salto final si necesitas bajar la intensidad.", icon:"burpee"},
+      {name:"Sprint en el sitio", tip:"Rodillas altas al máximo ritmo que puedas mantener con buena forma.", icon:"high-knees"}
+    ]
+  ]
+};
+
+const WORK_SEC = 40;
+const REST_SEC = 20;
+const WARMUP_SEC = 60;
+const ROUNDREST_SEC = 60;
+
+const RESTMSGS = [
+  "Recupera el aliento.",
+  "Buen ritmo, sigue así.",
+  "Hidrátate si lo necesitas.",
+  "Ya casi. Aguanta.",
+  "Hombros relajados, respira.",
+  "Vas muy bien."
+];
+
+/* ---------------------------------------------------------
+   ESTADO / STORAGE
+--------------------------------------------------------- */
+let sessions = [];
+let selectedType = null; // override elegido en home
+let currentSession = null; // {type, variant, steps, idx}
+let timer = {remaining:0, total:0, running:false, intervalId:null};
+
+async function loadSessions(){
+  try{
+    const res = await window.storage.get('entreno-sessions', false);
+    sessions = res ? JSON.parse(res.value) : [];
+  }catch(e){
+    sessions = [];
+  }
+}
+async function saveSessions(){
+  try{
+    await window.storage.set('entreno-sessions', JSON.stringify(sessions), false);
+  }catch(e){ /* almacenamiento no disponible, se sigue igualmente */ }
+}
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function daysAgoStr(n){
+  const d = new Date();
+  d.setDate(d.getDate()-n);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+function countByType(type){
+  return sessions.filter(s=>s.type===type).length;
+}
+function suggestType(){
+  return TYPES[sessions.length % 3];
+}
+function variantFor(type){
+  return countByType(type) % 3;
+}
+function calcStreak(){
+  const daySet = new Set(sessions.map(s=>s.date));
+  let streak = 0;
+  let cursor = daySet.has(todayStr()) ? 0 : 1; // si hoy no hay sesión, empieza a contar desde ayer
+  while(daySet.has(daysAgoStr(cursor))){
+    streak++;
+    cursor++;
+  }
+  return streak;
+}
+
+/* ---------------------------------------------------------
+   RENDER: HOME
+--------------------------------------------------------- */
+function angleForType(type){
+  return {core:60, fuerza:180, intenso:300}[type];
+}
+
+function renderHome(){
+  const type = selectedType || suggestType();
+  selectedType = type;
+  const variant = variantFor(type);
+
+  document.getElementById('dateLine').textContent =
+    new Date().toLocaleDateString('es-ES',{weekday:'long', day:'numeric', month:'long'}).toUpperCase();
+  document.getElementById('homeTitle').textContent = "Hoy: " + TYPE_LABEL[type];
+  document.getElementById('homePin').style.transform = `rotate(${angleForType(type)}deg) translate(29px)`;
+
+  document.querySelectorAll('.type-pill').forEach(p=>{
+    p.classList.toggle('active', p.dataset.type===type);
+  });
+
+  document.getElementById('variantLine').textContent =
+    `VARIANTE ${["A","B","C"][variant]} · ${TYPE_SUB[type].toUpperCase()} · ~15 MIN`;
+
+  document.getElementById('streakN').textContent = calcStreak();
+  document.getElementById('totalN').textContent = sessions.length;
+  const mins = sessions.length * 14;
+  document.getElementById('minN').textContent = mins;
+
+  const histEl = document.getElementById('historyList');
+  if(sessions.length===0){
+    histEl.innerHTML = '<div class="hist-row" style="color:var(--text-faint);">Aún no hay sesiones registradas.</div>';
+  }else{
+    const recent = sessions.slice(-5).reverse();
+    histEl.innerHTML = recent.map(s=>{
+      const color = `var(--${s.type})`;
+      return `<div class="hist-row">
+        <span>${s.date}</span>
+        <span class="hist-tag" style="background:${color}22; color:${color};">${TYPE_LABEL[s.type]}</span>
+      </div>`;
+    }).join("");
+  }
+}
+
+document.querySelectorAll('.type-pill').forEach(p=>{
+  p.addEventListener('click', ()=>{
+    selectedType = p.dataset.type;
+    renderHome();
+  });
+});
+
+document.getElementById('goPreviewBtn').addEventListener('click', ()=>{
+  showScreen('previewScreen');
+  renderPreview();
+});
+document.getElementById('startDirectBtn').addEventListener('click', ()=>{ unlockAudio(); startSession(); });
+document.getElementById('startFromPreviewBtn').addEventListener('click', ()=>{ unlockAudio(); startSession(); });
+
+/* ---------------------------------------------------------
+   RENDER: PREVIEW
+--------------------------------------------------------- */
+function renderPreview(){
+  const type = selectedType || suggestType();
+  const variant = variantFor(type);
+  const exercises = WORKOUTS[type][variant];
+
+  document.getElementById('previewEyebrow').textContent =
+    `${TYPE_LABEL[type].toUpperCase()} · VARIANTE ${["A","B","C"][variant]}`;
+  document.getElementById('previewTitle').textContent = TYPE_LABEL[type];
+
+  const rows = exercises.map((ex,i)=>`
+    <div class="ex-row">
+      <div class="ex-num">${i+1}</div>
+      <div class="ex-icon-wrap">${iconFor(ex.icon)}</div>
+      <div style="flex:1;">
+        <div class="ex-name">${ex.name}</div>
+        <div class="ex-tip">${ex.tip}</div>
+        <a class="ex-video-link" href="${ytSearchUrl(ex.name)}" target="_blank" rel="noopener">▶ Ver vídeo</a>
+      </div>
+      <div class="ex-time">${WORK_SEC}s</div>
+    </div>`).join("");
+
+  document.getElementById('previewList').innerHTML =
+    `<div class="eyebrow" style="margin-bottom:2px;">2 RONDAS · ${WORK_SEC}S TRABAJO / ${REST_SEC}S DESCANSO</div>` + rows;
+}
+
+/* ---------------------------------------------------------
+   SESIÓN / TRACKING
+--------------------------------------------------------- */
+function buildSteps(exercises){
+  const steps = [];
+  steps.push({phase:'warmup', name:'Calentamiento', tip:'Trote suave en el sitio, rotación de brazos y movilidad de cadera.', dur:WARMUP_SEC, exIdx:-1, icon:'jumping-jack'});
+  for(let round=0; round<2; round++){
+    exercises.forEach((ex, i)=>{
+      steps.push({phase:'work', name:ex.name, tip:ex.tip, dur:WORK_SEC, exIdx:i, round, icon:ex.icon});
+      const isLastOfRound = i===exercises.length-1;
+      if(!(isLastOfRound && round===1)){
+        steps.push({phase:'rest', name:'Descanso', tip:RESTMSGS[i%RESTMSGS.length], dur:REST_SEC, exIdx:i, round, icon:null});
+      }
+    });
+    if(round===0){
+      steps.push({phase:'roundrest', name:'Mitad de la sesión', tip:'Bebe agua y respira hondo. ¡Vas por la mitad!', dur:ROUNDREST_SEC, exIdx:-1, icon:null});
+    }
+  }
+  return steps;
+}
+
+function startSession(){
+  const type = selectedType || suggestType();
+  const variant = variantFor(type);
+  const exercises = WORKOUTS[type][variant];
+  currentSession = {type, variant, exercises, steps: buildSteps(exercises), idx:0};
+  showScreen('trackScreen');
+  document.getElementById('trackTypeLabel').textContent = TYPE_LABEL[type].toUpperCase();
+  renderDots();
+  goToStep(0);
+}
+
+function renderDots(){
+  const total = currentSession.exercises.length * 2;
+  let html = "";
+  for(let i=0;i<total;i++){
+    html += `<div class="dot" data-work="${i}"></div>`;
+  }
+  document.getElementById('dotsRow').innerHTML = html;
+}
+
+function workDotIndex(step){
+  if(step.phase!=='work') return null;
+  return step.round*currentSession.exercises.length + step.exIdx;
+}
+
+function updateDots(){
+  const steps = currentSession.steps;
+  const currentWorkIdx = workDotIndex(steps[currentSession.idx]);
+  document.querySelectorAll('.dot').forEach(d=>{
+    const i = parseInt(d.dataset.work,10);
+    d.classList.remove('done','now');
+    if(currentWorkIdx!==null && i===currentWorkIdx) d.classList.add('now');
+    else if(currentWorkIdx!==null && i<currentWorkIdx) d.classList.add('done');
+    else {
+      // marca como hecho si ya pasamos ese trabajo aunque estemos en un descanso posterior
+      let passed = false;
+      for(let j=0;j<currentSession.idx;j++){
+        const wi = workDotIndex(steps[j]);
+        if(wi===i) passed = true;
+      }
+      if(passed) d.classList.add('done');
+    }
+  });
+}
+
+const CIRC = 2*Math.PI*98;
+document.getElementById('ringProgress').setAttribute('stroke-dasharray', CIRC.toFixed(1));
+
+function phaseLabel(phase){
+  return {warmup:'CALENTAMIENTO', work:'TRABAJO', rest:'DESCANSO', roundrest:'DESCANSO LARGO'}[phase];
+}
+function phaseColor(){
+  return `var(--${currentSession.type})`;
+}
+
+function goToStep(i){
+  const steps = currentSession.steps;
+  if(i>=steps.length){ return finishSession(); }
+  currentSession.idx = i;
+  const step = steps[i];
+
+  document.getElementById('trackPhase').textContent = phaseLabel(step.phase);
+  document.getElementById('trackPhase').style.color = step.phase==='work' ? phaseColor() : 'var(--text-faint)';
+  document.getElementById('trackName').textContent = step.name;
+  document.getElementById('trackTip').textContent = step.tip;
+  document.getElementById('ringProgress').style.stroke = step.phase==='work' ? phaseColor() : 'var(--text)';
+
+  const videoLink = document.getElementById('trackVideoLink');
+  if(step.phase==='work'){
+    videoLink.style.display = 'inline-flex';
+    videoLink.href = ytSearchUrl(step.name);
+  }else{
+    videoLink.style.display = 'none';
+  }
+
+  const iconWrap = document.getElementById('trackIconWrap');
+  if(step.icon){
+    iconWrap.style.display = 'flex';
+    iconWrap.innerHTML = iconFor(step.icon);
+    iconWrap.style.color = step.phase==='work' ? phaseColor() : 'var(--text)';
+  }else{
+    iconWrap.style.display = 'none';
+  }
+
+  updateDots();
+  beep(step.phase==='work' ? 2 : 1);
+  if(navigator.vibrate) navigator.vibrate(step.phase==='work' ? [80,40,80] : 60);
+
+  startTimer(step.dur);
+}
+
+function startTimer(seconds){
+  clearInterval(timer.intervalId);
+  timer.total = seconds;
+  timer.remaining = seconds;
+  timer.running = true;
+  renderTimer();
+  document.getElementById('pauseBtn').textContent = 'Pausar';
+  timer.intervalId = setInterval(tick, 1000);
+}
+function tick(){
+  if(!timer.running) return;
+  timer.remaining -= 1;
+  renderTimer();
+  if(timer.remaining<=3 && timer.remaining>0 && navigator.vibrate) navigator.vibrate(30);
+  if(timer.remaining<=0){
+    clearInterval(timer.intervalId);
+    goToStep(currentSession.idx+1);
+  }
+}
+function renderTimer(){
+  document.getElementById('ringTime').textContent = Math.max(timer.remaining,0);
+  const frac = Math.max(timer.remaining,0)/timer.total;
+  const offset = CIRC * (1-frac);
+  document.getElementById('ringProgress').style.strokeDashoffset = offset.toFixed(1);
+}
+
+document.getElementById('pauseBtn').addEventListener('click', ()=>{
+  timer.running = !timer.running;
+  document.getElementById('pauseBtn').textContent = timer.running ? 'Pausar' : 'Reanudar';
+});
+document.getElementById('skipBtn').addEventListener('click', ()=>{
+  clearInterval(timer.intervalId);
+  goToStep(currentSession.idx+1);
+});
+document.getElementById('prevBtn').addEventListener('click', ()=>{
+  clearInterval(timer.intervalId);
+  goToStep(Math.max(currentSession.idx-1,0));
+});
+document.getElementById('quitTopBtn').addEventListener('click', ()=>{
+  clearInterval(timer.intervalId);
+  timer.running = false;
+  document.getElementById('quitOverlay').classList.add('active');
+});
+document.getElementById('quitCancelBtn').addEventListener('click', ()=>{
+  document.getElementById('quitOverlay').classList.remove('active');
+  startTimer(timer.remaining>0?timer.remaining:1);
+});
+document.getElementById('quitConfirmBtn').addEventListener('click', ()=>{
+  document.getElementById('quitOverlay').classList.remove('active');
+  goHome();
+});
+
+async function finishSession(){
+  clearInterval(timer.intervalId);
+  const {type, variant} = currentSession;
+  sessions.push({date:todayStr(), type, variant});
+  await saveSessions();
+
+  document.getElementById('summaryTitle').textContent =
+    `${TYPE_LABEL[type]} · Variante ${["A","B","C"][variant]}`;
+  document.getElementById('summaryLine').textContent =
+    `Sesión completada. Racha actual: ${calcStreak()} día(s).`;
+  showScreen('summaryScreen');
+  currentSession = null;
+}
+
+/* ---------------------------------------------------------
+   AUDIO (beep simple, sin recursos externos)
+--------------------------------------------------------- */
+let actx;
+function unlockAudio(){
+  try{
+    if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state === 'suspended') actx.resume();
+    // sonido silencioso para "desbloquear" el audio en iOS/Safari dentro del gesto del usuario
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    gain.gain.value = 0.0001;
+    osc.connect(gain).connect(actx.destination);
+    osc.start();
+    osc.stop(actx.currentTime + 0.05);
+  }catch(e){ /* audio no disponible */ }
+}
+function beep(times){
+  try{
+    if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state === 'suspended') actx.resume();
+    for(let i=0;i<times;i++){
+      const t = actx.currentTime + i*0.16;
+      const osc = actx.createOscillator();
+      const gain = actx.createGain();
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.001, t);
+      gain.gain.exponentialRampToValueAtTime(0.25, t+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, t+0.13);
+      osc.connect(gain).connect(actx.destination);
+      osc.start(t);
+      osc.stop(t+0.14);
+    }
+  }catch(e){ /* audio no disponible */ }
+}
+
+/* ---------------------------------------------------------
+   NAVEGACIÓN
+--------------------------------------------------------- */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goHome(){
+  clearInterval(timer.intervalId);
+  showScreen('homeScreen');
+  renderHome();
+}
+
+/* ---------------------------------------------------------
+   INIT
+--------------------------------------------------------- */
+(async function init(){
+  await loadSessions();
+  renderHome();
+})();
+</script>
+</body>
+</html>
