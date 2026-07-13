@@ -303,7 +303,7 @@
       <div id="historyList"><div class="hist-row" style="color:var(--text-faint);">Aún no hay sesiones registradas.</div></div>
     </div>
 
-    <div class="footnote">Solo necesitas cuerpo + esterilla. Guardado en este dispositivo/artefacto — si abres la app desde otro sitio, el historial no se comparte.</div>
+    <div class="footnote">Solo necesitas cuerpo + esterilla. El historial se guarda en este navegador/dispositivo — si la abres en otro móvil u otro navegador, empieza de cero. Si borras datos de navegación de esta web, también se pierde.</div>
   </div>
 
   <!-- ===== PREVIEW ===== -->
@@ -550,18 +550,20 @@ let selectedType = null; // override elegido en home
 let currentSession = null; // {type, variant, steps, idx}
 let timer = {remaining:0, total:0, running:false, intervalId:null};
 
+const STORAGE_KEY = 'sentadillas-y-canas-sesiones';
+
 async function loadSessions(){
   try{
-    const res = await window.storage.get('entreno-sessions', false);
-    sessions = res ? JSON.parse(res.value) : [];
+    const raw = localStorage.getItem(STORAGE_KEY);
+    sessions = raw ? JSON.parse(raw) : [];
   }catch(e){
     sessions = [];
   }
 }
 async function saveSessions(){
   try{
-    await window.storage.set('entreno-sessions', JSON.stringify(sessions), false);
-  }catch(e){ /* almacenamiento no disponible, se sigue igualmente */ }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+  }catch(e){ /* almacenamiento no disponible (ej. modo privado), se sigue igualmente */ }
 }
 
 function todayStr(){
